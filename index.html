@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+
+    <title>Akeneo development with Docker</title>
+
+    <meta name="description" content="Akeneo development with Docker">
+    <meta name="author" content="Damien Carcel <damien.carcel@akeneo.com>">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <link rel="stylesheet" href="bower_components/reveal.js/css/reveal.css">
+
+    <link rel="stylesheet" href="bower_components/akeneo-revealjs-theme/css/akeneo.css" id="theme">
+
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="bower_components/reveal.js/lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = window.location.search.match( /print-pdf/gi ) ? 'bower_components/reveal.js/css/print/pdf.css' : 'bower_components/reveal.js/css/print/paper.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="bower_components/reveal.js/lib/js/html5shiv.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+<div class="reveal">
+    <div class="slides">
+
+        <section>
+            <h1>Akeneo development<br>with Docker</h1>
+            <h3>Damien Carcel</h3>
+
+            <aside class="notes">
+                <!-- -->
+            </aside>
+        </section>
+
+        <section id="introduction">
+            <h2>What is Docker</h2>
+
+            <ul>
+                <li class=fragment>Different from VM (explain hypervisor, types, example)</li>
+                <li class=fragment>Container based (what is a container, other tech using it)</li>
+                <li class=fragment>Specificity of Docker: Dockerfile => Image => Container</li>
+                <li class=fragment>Present most usefull docker commands</li>
+            </ul>
+
+            <aside class="notes">
+                <!-- -->
+            </aside>
+        </section>
+
+        <section id="container-example">
+            <h2>How to use a docker container</h2>
+
+            <ul>
+                <li class=fragment>Concrete example: different MongoDB on my Archlinux who propose only 3.2</li>
+                <li class=fragment>
+                    Create a Dockerfile (Mongo 2.4, the one of the CI, but miss EXPOSE),
+                    build it (already build on the computer to gain time, add the EXPOSE and rebuild, the build don't do everything again)
+                </li>
+                <li class=fragment>Show a PIM preconfigured, do a behat only install to be quick</li>
+            </ul>
+
+            <aside class="notes">
+                <!-- -->
+            </aside>
+        </section>
+
+        <section id="full-container">
+            <h2>Full install with only docker containers</h2>
+
+            <ul>
+                <li class=fragment>Need containers for: MySQL, (MongoDB), Akeneo (Apache + PHP), behat (selenium + Firefox)</li>
+                <li class=fragment>All on the same network, isolated from the host => show how to create this network</li>
+                <li class=fragment>Show the Dockerfile for Akeneo</li>
+                <li class=fragment>Show docker hub for MySQL and Selenium images and explain the concept</li>
+                <li class=fragment>Show the commands to run all the container</li>
+                <li class=fragment>This is the CI 1.1 => Conclusion: OK if written once, really not if you need to do that several time a day</li>
+            </ul>
+
+            <aside class="notes">
+                <!-- -->
+            </aside>
+        </section>
+
+        <section id="docker-compose">
+            <h2>Docker compose</h2>
+
+            <ul>
+                <li class=fragment>Explain what is docker-compose</li>
+                <li class=fragment>Show a docker-compose.yml</li>
+                <li class=fragment>Present my repository</li>
+                <li class=fragment>Show how to use docker-compose</li>
+            </ul>
+
+            <aside class="notes">
+                <!-- -->
+            </aside>
+        </section>
+
+    </div>
+</div>
+
+<script src="bower_components/reveal.js/lib/js/head.min.js"></script>
+<script src="bower_components/reveal.js/js/reveal.js"></script>
+
+<footer class="footer">
+    <ul>
+        <li>
+            <img src="bower_components/akeneo-revealjs-theme/images/logo-svg-black.svg" width="200" style="vertical-align:middle">
+        </li>
+        <li>
+            <span class="name">Damien Carcel</span>
+        </li>
+    </ul>
+</footer>
+
+<script>
+
+    // Full list of configuration options available at:
+    // https://github.com/hakimel/reveal.js#configuration
+    Reveal.initialize({
+        controls: false,
+        progress: true,
+        history: true,
+        center: true,
+        slideNumber: true,
+
+        transition: 'slide', // none/fade/slide/convex/concave/zoom
+        parallaxBackgroundImage: 'bower_components/akeneo-revealjs-theme/images/slide-background-white-parallax.png',
+        parallaxBackgroundSize: '2100px 768px',
+
+        // Optional reveal.js plugins
+        dependencies: [
+            { src: 'bower_components/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+            { src: 'bower_components/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+            { src: 'bower_components/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+            { src: 'bower_components/reveal.js/plugin/highlight/highlight.js', async: true, condition: function() { return !!document.querySelector( 'pre code' ); }, callback: function() { hljs.initHighlightingOnLoad(); } },
+            { src: 'bower_components/reveal.js/plugin/zoom-js/zoom.js', async: true },
+            { src: 'bower_components/reveal.js/plugin/notes/notes.js', async: true }
+        ]
+    });
+
+</script>
+</body>
+</html>

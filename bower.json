@@ -1,0 +1,21 @@
+{
+    "name": "docker-presentation",
+    "authors": [
+        "Damien Carcel <damien.carcel@akeneo.com>"
+    ],
+    "description": "A presentation of docker for beginners",
+    "main": "index.html",
+    "keywords": [
+        "docker",
+        "presentation"
+    ],
+    "license": "MIT",
+    "homepage": "",
+    "private": true,
+    "ignore": [
+        "bower_components"
+    ],
+    "dependencies": {
+        "akeneo-revealjs-theme": "git@github.com:akeneo/revealjs-theme.git#v1.0"
+    }
+}
