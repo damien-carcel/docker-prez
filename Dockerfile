@@ -9,8 +9,6 @@ RUN apt-get update && \
     apt-get clean && apt-get --yes --quiet autoremove --purge && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-EXPOSE 27017
-
 # Run mongod in foreground
 RUN mkdir /data && mkdir /data/db
 CMD ["/usr/bin/mongod", "--nojournal"]

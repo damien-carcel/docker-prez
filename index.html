@@ -228,35 +228,265 @@ parameters:
         </section>
 
         <section id="full-container">
-            <h2>Full install with only docker containers</h2>
+            <section>
+                <h2>Akeneo on full docker containers</h2>
 
-            <ul>
-                <li class=fragment>Need containers for: MySQL, (MongoDB), Akeneo (Apache + PHP), behat (selenium + Firefox)</li>
-                <li class=fragment>All on the same network, isolated from the host => show how to create this network</li>
-                <li class=fragment>Show the Dockerfile for Akeneo</li>
-                <li class=fragment>Show docker hub for MySQL and Selenium images and explain the concept</li>
-                <li class=fragment>Show the commands to run all the container</li>
-                <li class=fragment>This is the CI 1.1 => Conclusion: OK if written once, really not if you need to do that several time a day</li>
-            </ul>
+                <br><br>
 
-            <aside class="notes">
-                <!-- -->
-            </aside>
+                <ul>
+                    <li class="fragment">What containers do we need?</li>
+                    <ul>
+                        <li class="fragment">MySQL</li>
+                        <li class="fragment">MongoDB</li>
+                        <li class="fragment">Apache + PHP</li>
+                        <li class="fragment">Selenium + Firefox</li>
+                    </ul>
+
+                    <br><br>
+
+                    <li class="fragment">Those containers have to communicate with each other</li>
+                    <li class="fragment">We also need to make the PIM communicate with them</li>
+                </ul>
+
+                <aside class="notes">
+                    <!-- -->
+                </aside>
+            </section>
+
+            <section>
+                <h2>Akeneo on full docker containers</h2>
+
+                <br><br>
+
+                <ul>
+                    <li>Docker networks for communication</li>
+                </ul>
+
+                <pre class="fragment"><code class="bash">
+    $ docker network create akeneo
+                </code></pre>
+
+                <pre class="fragment"><code class="bash">
+    $ docker run --name akeneo-mongo --network akeneo -d mymongo
+                </code></pre>
+
+                <aside class="notes">
+                    <p>Present the docker "network" command</p>
+                </aside>
+            </section>
+
+            <section>
+                <h2>Akeneo on full docker containers</h2>
+
+                <br><br>
+
+                <ul>
+                    <li>Comes docker hub to the rescue!</li>
+                </ul>
+
+                <aside class="notes">
+                    Present docker hub and show mysql and selenium images
+                </aside>
+            </section>
+
+            <section>
+                <h2>Akeneo on full docker containers</h2>
+
+                <br><br>
+
+                <pre><code class="dockerfile">
+FROM debian:jessie
+MAINTAINER Damien Carcel &lt;damien.carcel@akeneo.com&gt;
+
+ENV DEBIAN_FRONTEND noninteractive
+
+# Install Apache + mod_php and some PHP extensions
+RUN apt-get update && \
+    apt-get --yes --quiet install \
+        curl git imagemagick wget sudo perceptualdiff ca-certificates \
+        apache2 libapache2-mod-php5 php5-cli \
+        php5-apcu php5-curl php5-gd php5-imagick php5-intl php5-mongo php5-mcrypt php5-mysql php5-xdebug && \
+    apt-get clean && apt-get --yes --quiet autoremove --purge && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Add a "docker" user
+RUN sudo useradd docker --shell /bin/bash --create-home \
+  && sudo usermod -a -G sudo docker \
+  && echo 'ALL ALL = (ALL) NOPASSWD: ALL' >> /etc/sudoers \
+  && echo 'docker:secret' | chpasswd
+
+# Configure PHP
+RUN php5enmod mcrypt && php5dismod xdebug
+
+RUN sed -i "s/;date.timezone =/date.timezone = Europe\/Paris/" /etc/php5/cli/php.ini && \
+    sed -i "s/;date.timezone =/date.timezone = Europe\/Paris/" /etc/php5/apache2/php.ini && \
+    sed -i "s/memory_limit = .*/memory_limit = 2G/" /etc/php5/cli/php.ini && \
+    sed -i "s/memory_limit = .*/memory_limit = 512M/" /etc/php5/apache2/php.ini && \
+    sed -i "s/upload_max_filesize = .*/upload_max_filesize = 20M/" /etc/php5/cli/php.ini && \
+    sed -i "s/upload_max_filesize = .*/upload_max_filesize = 20M/" /etc/php5/apache2/php.ini && \
+    sed -i "s/post_max_size = .*/post_max_size = 21M/" /etc/php5/cli/php.ini && \
+    sed -i "s/post_max_size = .*/post_max_size = 21M/" /etc/php5/apache2/php.ini
+
+# Configure Apache
+RUN a2enmod rewrite && \
+    echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
+RUN sed -i "s/export APACHE_RUN_USER=www-data/export APACHE_RUN_USER=docker/" /etc/apache2/envvars && \
+    sed -i "s/export APACHE_RUN_GROUP=www-data/export APACHE_RUN_GROUP=docker/" /etc/apache2/envvars && \
+    chown -R docker: /var/lock/apache2
+
+# Install composer
+RUN curl -sSL https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+RUN chmod +x /usr/local/bin/composer
+
+# Add some utilities
+COPY pim-initialize.sh /usr/local/bin/pim-initialize
+RUN chmod +x /usr/local/bin/pim-initialize
+
+# Add Akeneo VHOST as default
+COPY akeneo-behat.local.conf /etc/apache2/sites-available/000-default.conf
+
+# Expose Apache to the host
+EXPOSE 80
+
+# Define "docker" as current user
+USER docker
+
+# Run apache in foreground
+CMD ["sudo", "/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
+                </code></pre>
+
+                <aside class="notes">
+                    <!-- -->
+                </aside>
+            </section>
+
+            <section>
+                <h2>Akeneo on full docker containers</h2>
+
+                <br><br>
+
+                <pre class="fragment"><code class="bash">
+    $ docker network create akeneo
+                </code></pre>
+
+                <pre class="fragment"><code class="bash">
+    $ docker run --name akeneo-mongo --network akeneo -d mymongo
+                </code></pre>
+
+                <pre class="fragment"><code class="bash">
+    $ docker run --name mysql -d --network akeneo \\
+        -e MYSQL_ROOT_PASSWORD=root \\
+        -e MYSQL_DATABASE=akeneo_pim \\
+        -e MYSQL_USER=akeneo_pim \\
+        -e MYSQL_PASSWORD=akeneo_pim \\
+        mysql:5.5
+                </code></pre>
+
+                <aside class="notes">
+                    <p>Explain the environment option</p>
+                </aside>
+            </section>
+
+            <section>
+                <h2>Akeneo on full docker containers</h2>
+
+                <br><br>
+
+                <pre class="fragment"><code class="bash">
+    $ docker run --name akeneo -d --network akeneo -w /home/docker/pim \\
+        -e BEHAT_TMPDIR="/home/docker/pim/app/cache/tmp" \\
+        -v /home/damien/Development/PIMs/PimCommunity16:/home/docker/pim \\
+        -v /tmp/behat/screenshots:/tmp/behat/screenshots \\
+        -v /home/damien/.composer:/home/docker/.composer \\
+        apache-php
+                </code></pre>
+
+                <pre class="fragment"><code class="bash">
+    $ docker run --name selenium -d --network akeneo -p 5900:5900 \\
+        -v /home/damien/Development/PIMs/PimCommunity16:/home/docker/pim \\
+        -v /tmp/behat/screenshots:/tmp/behat/screenshots \\
+        selenium/standalone-firefox-debug:2.53.1-beryllium
+                </code></pre>
+
+                <aside class="notes">
+                    Explain the volumes and present the volume command
+                </aside>
+            </section>
+
+            <section>
+                <h2>Akeneo on full docker containers</h2>
+
+                <br><br>
+
+                <img src="images/yolo.gif">
+
+                <aside class="notes">
+                    <p>This is basically the DCI v1.1</p>
+                </aside>
+            </section>
+
+            <section>
+                <h2>Akeneo on full docker containers</h2>
+
+                <br><br>
+
+                <h1>There is another way</h1>
+
+                <aside class="notes">
+                    <p>This is basically the DCI v1.1</p>
+                </aside>
+            </section>
         </section>
 
         <section id="docker-compose">
-            <h2>Docker compose</h2>
+            <section>
+                <h2>Docker compose</h2>
 
-            <ul>
-                <li class=fragment>Explain what is docker-compose</li>
-                <li class=fragment>Show a docker-compose.yml</li>
-                <li class=fragment>Present my repository</li>
-                <li class=fragment>Show how to use docker-compose</li>
-            </ul>
+                <br><br>
 
-            <aside class="notes">
-                <!-- -->
-            </aside>
+                <aside class="notes">
+                    <!-- -->
+                </aside>
+
+            </section>
+
+            <section>
+                <h2>Docker compose</h2>
+
+                <br><br>
+
+                <aside class="notes">
+                    <!-- -->
+                </aside>
+
+            </section>
+
+            <section>
+                <h2>Docker compose</h2>
+
+                <br><br>
+
+                <aside class="notes">
+                    <!-- -->
+                </aside>
+
+            </section>
+
+            <section>
+                <h2>Docker compose</h2>
+
+                <br><br>
+
+                <aside class="notes">
+                    <!-- -->
+                </aside>
+
+            </section>
+            <!--<li class=fragment>Explain what is docker-compose</li>-->
+            <!--<li class=fragment>Present my repository</li>-->
+            <!--<li class=fragment>Show a docker-compose.yml</li>-->
+            <!--<li class=fragment>Show how to use docker-compose</li>-->
         </section>
 
     </div>
