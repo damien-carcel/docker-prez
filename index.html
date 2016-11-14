@@ -41,25 +41,89 @@
         <section>
             <h1>Akeneo development<br>with Docker</h1>
             <h3>Damien Carcel</h3>
-
-            <aside class="notes">
-                <!-- -->
-            </aside>
         </section>
 
         <section id="introduction">
-            <h2>What is Docker</h2>
+            <section>
+                <h2>What is Docker</h2>
 
-            <ul>
-                <li class=fragment>Different from VM (explain hypervisor, types, example)</li>
-                <li class=fragment>Container based (what is a container, other tech using it)</li>
-                <li class=fragment>Specificity of Docker: Dockerfile => Image => Container</li>
-                <li class=fragment>Present most usefull docker commands</li>
-            </ul>
+                <ul>
+                    <li class=fragment>Docker is not (really) a virtual machine (VM)</li>
+                </ul>
+                <br><br>
 
-            <aside class="notes">
-                <!-- -->
-            </aside>
+                <img src="images/virtualization.svg" class="fragment">
+
+                <aside class="notes">
+                    <!-- -->
+                </aside>
+            </section>
+
+            <section>
+                <h2>What is Docker</h2>
+
+                <div class=fragment>
+                    <div style="float: left">
+                        <ul>
+                            <li>Docker is a container manager</li>
+
+                            <br><br>
+
+                            <li class=fragment>Based on cgroups and Linux namespaces</li>
+                            <ul>
+                                <li class=fragment>cgroups: resources management</li>
+                                <li class=fragment>namespace: isolation</li>
+                            </ul>
+                        </ul>
+                    </div>
+                    <div style="float: right">
+                        <img src="images/docker.png" width="250px">
+                    </div>
+                </div>
+
+                <br><br>
+
+                <ul>
+                    <li class=fragment>Other container managers you may know: chroot, systemd-nspawn, LXC</li>
+                </ul>
+
+                <aside class="notes">
+                    <p>People put it in the "Operating system level virtualisation" type</p>
+                    <p>Similar tech: LXC</p>
+                </aside>
+            </section>
+
+            <section>
+                <h2>What is Docker</h2>
+
+                <br><br>
+
+                <img src="images/vms_vs_containers.jpg">
+                <p>Virtual machines vs. containers</p>
+
+                <aside class="notes">
+                    <p>Containers remove the hardware virtualization and the guest system</p>
+                </aside>
+            </section>
+
+            <section>
+                <h2>What is Docker</h2>
+
+                <br><br>
+
+                <ul>
+                    <li class=fragment>Docker specificity</li>
+                    <ul>
+                        <li class="fragment">Dockerfile → Image → Containers</li>
+                        <li class="fragment">Only one process in the container</li>
+                    </ul>
+                </ul>
+
+                <aside class="notes">
+                    <p>Run a debian in iteractive mode (introduce "run" command)</p>
+                    <p>Run a "ps aux" to show there is only bash, compare with CI master</p>
+                </aside>
+            </section>
         </section>
 
         <section id="container-example">
@@ -136,7 +200,7 @@
         controls: false,
         progress: true,
         history: true,
-        center: true,
+        center: false,
         slideNumber: true,
 
         transition: 'slide', // none/fade/slide/convex/concave/zoom
