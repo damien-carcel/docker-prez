@@ -120,27 +120,111 @@
                 </ul>
 
                 <aside class="notes">
-                    <p>Run a debian in iteractive mode (introduce "run" command)</p>
+                    <p>Run a debian in iteractive mode (introduce "run" and "pull" commands)</p>
                     <p>Run a "ps aux" to show there is only bash, compare with CI master</p>
                 </aside>
             </section>
         </section>
 
         <section id="container-example">
-            <h2>How to use a docker container</h2>
+            <section>
+                <h2>How to use a docker container</h2>
 
-            <ul>
-                <li class=fragment>Concrete example: different MongoDB on my Archlinux who propose only 3.2</li>
-                <li class=fragment>
-                    Create a Dockerfile (Mongo 2.4, the one of the CI, but miss EXPOSE),
-                    build it (already build on the computer to gain time, add the EXPOSE and rebuild, the build don't do everything again)
-                </li>
-                <li class=fragment>Show a PIM preconfigured, do a behat only install to be quick</li>
-            </ul>
+                <br><br>
 
-            <aside class="notes">
-                <!-- -->
-            </aside>
+                <ul>
+                    <li class=fragment>Let's take a real use case with my own computer</li>
+                    <ul>
+                        <li class="fragment">PHP 7.0</li>
+                        <li class="fragment">FPM + nginx</li>
+                        <li class="fragment">MariaDB 10</li>
+                        <li class="fragment">MongoDB 3.2…</li>
+                    </ul>
+                    <li class=fragment>Let's create (and work with) a MongoDB container</li>
+                </ul>
+
+                <aside class="notes">
+                    <!-- -->
+                </aside>
+            </section>
+
+            <section>
+                <h2>How to use a docker container</h2>
+
+                <br><br>
+
+                <pre><code class="dockerfile">
+FROM debian:jessie
+MAINTAINER Damien Carcel &lt;damien.carcel@akeneo.com&gt;
+
+ENV DEBIAN_FRONTEND noninteractive
+
+# Install MongoDB
+RUN apt-get update && \
+    apt-get --yes --quiet install mongodb && \
+    apt-get clean && apt-get --yes --quiet autoremove --purge && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Run mongod in foreground
+RUN mkdir /data && mkdir /data/db
+CMD ["/usr/bin/mongod", "--nojournal"]
+                </code></pre>
+
+                <aside class="notes">
+                    <p>Build (present "build" command) this image (already done to gain time) and explain messages</p>
+                    <p>Present "image" command</p>
+                </aside>
+            </section>
+
+            <section>
+                <h2>How to use a docker container</h2>
+
+                <br><br>
+
+                <pre><code class="dockerfile">
+FROM debian:jessie
+MAINTAINER Damien Carcel &lt;damien.carcel@akeneo.com&gt;
+
+ENV DEBIAN_FRONTEND noninteractive
+
+# Install MongoDB
+RUN apt-get update && \
+    apt-get --yes --quiet install mongodb && \
+    apt-get clean && apt-get --yes --quiet autoremove --purge && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+EXPOSE 27017
+
+# Run mongod in foreground
+RUN mkdir /data && mkdir /data/db
+CMD ["/usr/bin/mongod", "--nojournal"]
+                </code></pre>
+
+                <aside class="notes">
+                    <p>Rebuild and run it with PATH mapping</p>
+                </aside>
+            </section>
+
+            <section>
+                <h2>How to use a docker container</h2>
+
+                <br><br>
+
+                <pre><code class="yaml">
+# app/config/pim_parameters.yml
+parameters:
+    ...
+    pim_catalog_product_storage_driver: doctrine/mongodb-odm
+
+    mongodb_server: 'mongodb://localhost:27018'
+    mongodb_database: akeneo_pim
+    ...
+                </code></pre>
+
+                <aside class="notes">
+                    <!-- -->
+                </aside>
+            </section>
         </section>
 
         <section id="full-container">
