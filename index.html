@@ -1,0 +1,723 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+
+    <title>Akeneo development with Docker</title>
+
+    <meta name="description" content="Akeneo development with Docker">
+    <meta name="author" content="Damien Carcel <damien.carcel@akeneo.com>">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <link rel="stylesheet" href="bower_components/reveal.js/css/reveal.css">
+
+    <link rel="stylesheet" href="bower_components/akeneo-revealjs-theme/css/akeneo.css" id="theme">
+
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="bower_components/reveal.js/lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = window.location.search.match( /print-pdf/gi ) ? 'bower_components/reveal.js/css/print/pdf.css' : 'bower_components/reveal.js/css/print/paper.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="bower_components/reveal.js/lib/js/html5shiv.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+<div class="reveal">
+    <div class="slides">
+
+        <section class="center">
+            <h1>Akeneo development<br>with Docker</h1>
+            <h3>Damien Carcel</h3>
+        </section>
+
+        <section id="introduction">
+            <section>
+                <h2>What is Docker</h2>
+
+                <ul>
+                    <li class=fragment>Docker is not (really) a virtual machine (VM)</li>
+                </ul>
+                <br><br>
+
+                <img src="images/virtualization.svg" class="fragment">
+
+                <aside class="notes">
+                    <!-- -->
+                </aside>
+            </section>
+
+            <section>
+                <h2>What is Docker</h2>
+
+                <div class=fragment>
+                    <div style="float: left">
+                        <ul>
+                            <li>Docker is a container manager</li>
+
+                            <br><br>
+
+                            <li class=fragment>Based on cgroups and Linux namespaces</li>
+                            <ul>
+                                <li class=fragment>cgroups: resources management</li>
+                                <li class=fragment>namespace: isolation</li>
+                            </ul>
+                        </ul>
+                    </div>
+                    <div style="float: right">
+                        <img src="images/docker.png" width="250px">
+                    </div>
+                </div>
+
+                <br><br>
+
+                <ul>
+                    <li class=fragment>Other container managers you may know: chroot, systemd-nspawn, LXC</li>
+                </ul>
+
+                <aside class="notes">
+                    <p>People put it in the "Operating system level virtualisation" type</p>
+                    <p>Similar tech: LXC</p>
+                </aside>
+            </section>
+
+            <section>
+                <h2>What is Docker</h2>
+
+                <br><br>
+
+                <img src="images/vms_vs_containers.jpg">
+                <p>Virtual machines vs. containers</p>
+
+                <aside class="notes">
+                    <p>Containers remove the hardware virtualization and the guest system</p>
+                </aside>
+            </section>
+
+            <section>
+                <h2>What is Docker</h2>
+
+                <br><br>
+
+                <ul>
+                    <li>Docker specificity</li>
+                    <ul>
+                        <li class="fragment">Dockerfile → Image → Containers</li>
+                        <li class="fragment">Only one process in the container</li>
+                    </ul>
+                </ul>
+
+                <aside class="notes">
+                    <p>Run a debian in iteractive mode (introduce "run" and "pull" commands)</p>
+                    <p>Run a "ps aux" to show there is only bash, compare with CI master</p>
+                </aside>
+            </section>
+        </section>
+
+        <section id="container-example">
+            <section>
+                <h2>How to use a docker container</h2>
+
+                <br><br>
+
+                <ul>
+                    <li class=fragment>Let's take a real use case with my own computer</li>
+                    <ul>
+                        <li class="fragment">PHP 7.0</li>
+                        <li class="fragment">FPM + nginx</li>
+                        <li class="fragment">MariaDB 10</li>
+                        <li class="fragment">MongoDB 3.2…</li>
+                    </ul>
+                    <li class=fragment>Let's create (and work with) a MongoDB container</li>
+                </ul>
+
+                <aside class="notes">
+                    <!-- -->
+                </aside>
+            </section>
+
+            <section>
+                <h2>How to use a docker container</h2>
+
+                <br><br>
+
+                <pre><code class="dockerfile">
+FROM debian:jessie
+MAINTAINER Damien Carcel &lt;damien.carcel@akeneo.com&gt;
+
+ENV DEBIAN_FRONTEND noninteractive
+
+# Install MongoDB
+RUN apt-get update && \
+    apt-get --yes --quiet install mongodb && \
+    apt-get clean && apt-get --yes --quiet autoremove --purge && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Run mongod in foreground
+RUN mkdir /data && mkdir /data/db
+CMD ["/usr/bin/mongod", "--nojournal"]
+                </code></pre>
+
+                <pre class="fragment"><code class="bash">
+    $ docker build -t mymongo .
+                </code></pre>
+
+                <aside class="notes">
+                    <p>Build (present "build" command) this image (already done to gain time) and explain messages</p>
+                    <p>Present "image" command</p>
+                </aside>
+            </section>
+
+            <section>
+                <h2>How to use a docker container</h2>
+
+                <br><br>
+
+                <pre><code class="dockerfile">
+FROM debian:jessie
+MAINTAINER Damien Carcel &lt;damien.carcel@akeneo.com&gt;
+
+ENV DEBIAN_FRONTEND noninteractive
+
+# Install MongoDB
+RUN apt-get update && \
+    apt-get --yes --quiet install mongodb && \
+    apt-get clean && apt-get --yes --quiet autoremove --purge && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+EXPOSE 27017
+
+# Run mongod in foreground
+RUN mkdir /data && mkdir /data/db
+CMD ["/usr/bin/mongod", "--nojournal"]
+                </code></pre>
+
+                <aside class="notes">
+                    <p>Rebuild and run it with PATH mapping</p>
+                </aside>
+            </section>
+
+            <section>
+                <h2>How to use a docker container</h2>
+
+                <br><br>
+
+                <pre><code class="bash">
+    $ docker run --name akeneo-mongo -p 27018:27017 mymongo
+                </code></pre>
+
+                <pre class="fragment"><code class="yaml">
+# app/config/pim_parameters.yml
+parameters:
+    ...
+    pim_catalog_product_storage_driver: doctrine/mongodb-odm
+
+    mongodb_server: 'mongodb://localhost:27018'
+    mongodb_database: akeneo_pim
+    ...
+                </code></pre>
+
+                <aside class="notes">
+                    <!-- -->
+                </aside>
+            </section>
+        </section>
+
+        <section id="full-container">
+            <section>
+                <h2>Akeneo on full docker containers</h2>
+
+                <br><br>
+
+                <ul>
+                    <li class="fragment">What containers do we need?</li>
+                    <ul>
+                        <li class="fragment">MySQL</li>
+                        <li class="fragment">MongoDB</li>
+                        <li class="fragment">Apache + PHP</li>
+                        <li class="fragment">Selenium + Firefox</li>
+                    </ul>
+
+                    <br><br>
+
+                    <li class="fragment">Those containers have to communicate with each other</li>
+                    <li class="fragment">We also need to make the PIM communicate with them</li>
+                </ul>
+
+                <aside class="notes">
+                    <!-- -->
+                </aside>
+            </section>
+
+            <section>
+                <h2>Akeneo on full docker containers</h2>
+
+                <br><br>
+
+                <ul>
+                    <li>Docker networks for communication</li>
+                </ul>
+
+                <pre class="fragment"><code class="bash">
+    $ docker network create akeneo
+                </code></pre>
+
+                <pre class="fragment"><code class="bash">
+    $ docker run --name akeneo-mongo --network akeneo -d mymongo
+                </code></pre>
+
+                <aside class="notes">
+                    <p>Present the docker "network" command</p>
+                </aside>
+            </section>
+
+            <section>
+                <h2>Akeneo on full docker containers</h2>
+
+                <br><br>
+
+                <ul>
+                    <li>Comes docker hub to the rescue!</li>
+                </ul>
+
+                <aside class="notes">
+                    Present docker hub and show mysql and selenium images
+                </aside>
+            </section>
+
+            <section>
+                <h2>Akeneo on full docker containers</h2>
+
+                <br><br>
+
+                <pre><code class="dockerfile">
+FROM debian:jessie
+MAINTAINER Damien Carcel &lt;damien.carcel@akeneo.com&gt;
+
+ENV DEBIAN_FRONTEND noninteractive
+
+# Install Apache + mod_php and some PHP extensions
+RUN apt-get update && \
+    apt-get --yes --quiet install \
+        curl git imagemagick wget sudo perceptualdiff ca-certificates \
+        apache2 libapache2-mod-php5 php5-cli \
+        php5-apcu php5-curl php5-gd php5-imagick php5-intl php5-mongo php5-mcrypt php5-mysql php5-xdebug && \
+    apt-get clean && apt-get --yes --quiet autoremove --purge && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Add a "docker" user
+RUN sudo useradd docker --shell /bin/bash --create-home \
+  && sudo usermod -a -G sudo docker \
+  && echo 'ALL ALL = (ALL) NOPASSWD: ALL' >> /etc/sudoers \
+  && echo 'docker:secret' | chpasswd
+
+# Configure PHP
+RUN php5enmod mcrypt && php5dismod xdebug
+
+RUN sed -i "s/;date.timezone =/date.timezone = Europe\/Paris/" /etc/php5/cli/php.ini && \
+    sed -i "s/;date.timezone =/date.timezone = Europe\/Paris/" /etc/php5/apache2/php.ini && \
+    sed -i "s/memory_limit = .*/memory_limit = 2G/" /etc/php5/cli/php.ini && \
+    sed -i "s/memory_limit = .*/memory_limit = 512M/" /etc/php5/apache2/php.ini && \
+    sed -i "s/upload_max_filesize = .*/upload_max_filesize = 20M/" /etc/php5/cli/php.ini && \
+    sed -i "s/upload_max_filesize = .*/upload_max_filesize = 20M/" /etc/php5/apache2/php.ini && \
+    sed -i "s/post_max_size = .*/post_max_size = 21M/" /etc/php5/cli/php.ini && \
+    sed -i "s/post_max_size = .*/post_max_size = 21M/" /etc/php5/apache2/php.ini
+
+# Configure Apache
+RUN a2enmod rewrite && \
+    echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
+RUN sed -i "s/export APACHE_RUN_USER=www-data/export APACHE_RUN_USER=docker/" /etc/apache2/envvars && \
+    sed -i "s/export APACHE_RUN_GROUP=www-data/export APACHE_RUN_GROUP=docker/" /etc/apache2/envvars && \
+    chown -R docker: /var/lock/apache2
+
+# Install composer
+RUN curl -sSL https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+RUN chmod +x /usr/local/bin/composer
+
+# Add some utilities
+COPY pim-initialize.sh /usr/local/bin/pim-initialize
+RUN chmod +x /usr/local/bin/pim-initialize
+
+# Add Akeneo VHOST as default
+COPY akeneo-behat.local.conf /etc/apache2/sites-available/000-default.conf
+
+# Expose Apache to the host
+EXPOSE 80
+
+# Define "docker" as current user
+USER docker
+
+# Run apache in foreground
+CMD ["sudo", "/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
+                </code></pre>
+
+                <aside class="notes">
+                    <!-- -->
+                </aside>
+            </section>
+
+            <section>
+                <h2>Akeneo on full docker containers</h2>
+
+                <br><br>
+
+                <pre class="fragment"><code class="bash">
+    $ docker network create akeneo
+                </code></pre>
+
+                <pre class="fragment"><code class="bash">
+    $ docker build -t mymongo .
+                </code></pre>
+
+                <pre class="fragment"><code class="bash">
+    $ docker run --name akeneo-mongo -d --network akeneo mymongo
+                </code></pre>
+
+                <pre class="fragment"><code class="bash">
+    $ docker run --name mysql -d --network akeneo \\
+        -e MYSQL_ROOT_PASSWORD=root \\
+        -e MYSQL_DATABASE=akeneo_pim \\
+        -e MYSQL_USER=akeneo_pim \\
+        -e MYSQL_PASSWORD=akeneo_pim \\
+        mysql:5.5
+                </code></pre>
+
+                <aside class="notes">
+                    <p>Explain the environment option</p>
+                </aside>
+            </section>
+
+            <section>
+                <h2>Akeneo on full docker containers</h2>
+
+                <br><br>
+
+                <pre><code class="bash">
+    $ docker run --name selenium -d --network akeneo -p 5900:5900 \\
+        -v /home/damien/Development/PIMs/PimCommunity16:/home/docker/pim \\
+        -v /tmp/behat/screenshots:/tmp/behat/screenshots \\
+        selenium/standalone-firefox-debug:2.53.1-beryllium
+                </code></pre>
+
+                <pre class="fragment"><code class="bash">
+    $ docker run --name akeneo -d --network akeneo -p 8080:80 -w /home/docker/pim \\
+        -e BEHAT_TMPDIR="/home/docker/pim/app/cache/tmp" \\
+        -v /home/damien/Development/PIMs/PimCommunity16:/home/docker/pim \\
+        -v /tmp/behat/screenshots:/tmp/behat/screenshots \\
+        -v /home/damien/.composer:/home/docker/.composer \\
+        apache-php
+                </code></pre>
+
+                <aside class="notes">
+                    Explain the volumes and present the volume command
+                </aside>
+            </section>
+
+            <section>
+                <h2>Akeneo on full docker containers</h2>
+
+                <br><br>
+
+                <img src="images/yolo.gif">
+
+                <aside class="notes">
+                    <p>This is basically the DCI v1.1</p>
+                </aside>
+            </section>
+
+            <section>
+                <h2>Akeneo on full docker containers</h2>
+
+                <br><br>
+
+                <h1>There must be another way</h1>
+
+                <aside class="notes">
+                    <p>This is basically the DCI v1.1</p>
+                </aside>
+            </section>
+        </section>
+
+        <section id="docker-compose">
+            <section>
+                <h2>Docker compose</h2>
+
+                <br><br>
+
+                <img src="images/compose.png" height="450px">
+
+                <aside class="notes">
+                    <p>Tool for defining and running multi-container Docker applications</p>
+                    <p>Based on a YAML file</p>
+                </aside>
+            </section>
+
+            <section>
+                <h2>Docker compose</h2>
+
+                <br><br>
+
+                <pre><code class="yaml"># docker-compose.yml
+version: '2'
+
+services:
+  akeneo:
+    image: carcel/akeneo:php-5.6
+    networks:
+      - akeneo
+
+  mysql:
+    image: mysql:5.5
+    networks:
+      - akeneo
+
+networks:
+  akeneo: ~
+                </code></pre>
+
+                <aside class="notes">
+                    <p>Show my docker hub repositories</p>
+                </aside>
+            </section>
+
+            <section>
+                <h2>Docker compose</h2>
+
+                <br><br>
+
+                <pre><code class="yaml">
+version: '2'
+
+services:
+  akeneo:
+    image: carcel/akeneo-behat:php-5.6
+    depends_on:
+      - mysql
+      - selenium
+    user: docker
+    environment:
+        - BEHAT_TMPDIR=/home/docker/pim/app/tmp
+    volumes:
+      - .:/home/docker/pim
+      - /home/damien/.composer:/home/docker/.composer
+      - /tmp/behat/screenshots:/tmp/behat/screenshots
+    working_dir: /home/docker/pim
+    ports:
+      - '8080:80'
+    networks:
+      - akeneo
+
+  selenium:
+    image: selenium/standalone-firefox-debug:2.53.1-beryllium
+    volumes:
+      - .:/home/docker/pim
+    ports:
+      - '5900:5900'
+    networks:
+      - akeneo
+
+  mysql:
+    image: mysql:5.5
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_USER=akeneo_pim
+      - MYSQL_PASSWORD=akeneo_pim
+      - MYSQL_DATABASE=akeneo_pim
+    networks:
+      - akeneo
+
+networks:
+  akeneo: ~
+                </code></pre>
+
+                <aside class="notes">
+                    <p>We can use "build" instead of "image" to build a Dockerfile on the fly</p>
+                </aside>
+            </section>
+
+            <section>
+                <h2>Docker compose</h2>
+
+                <br><br>
+
+                <pre><code class="yaml">
+# app/config/parameters_test.yml
+parameters:
+    database_driver: pdo_mysql
+    database_host: mysql
+    database_port: null
+    database_name: akeneo_pim
+    database_user: akeneo_pim
+    database_password: akeneo_pim
+    locale: en
+    secret: ThisTokenIsNotSoSecretChangeIt
+    installer_data: PimInstallerBundle:minimal
+    # pim_catalog_product_storage_driver: doctrine/mongodb-odm
+    # mongodb_server: 'mongodb://akeneo-mongo:27017'
+    # mongodb_database: akeneo_pim
+                </code></pre>
+
+                <aside class="notes">
+                    <!-- -->
+                </aside>
+            </section>
+
+            <section>
+                <h2>Docker compose</h2>
+
+                <br><br>
+
+                <pre><code class="yaml">
+# behat.yml
+default:
+    paths:
+        features: features
+    context:
+        class:  'Context\FeatureContext'
+        parameters:
+            base_url: 'http://akeneo/'
+            timeout: 10000
+            window_width: 1280
+            window_height: 1024
+    extensions:
+        Behat\MinkExtension\Extension:
+            default_session: symfony2
+            show_cmd: chromium-browser %s
+            selenium2:
+                wd_host: 'http://selenium:4444/wd/hub'
+            base_url: 'http://akeneo/'
+            files_path: 'features/Context/fixtures/'
+        Behat\Symfony2Extension\Extension:
+            kernel:
+                env: behat
+                debug: false
+        SensioLabs\Behat\PageObjectExtension\Extension: ~
+                </code></pre>
+
+                <aside class="notes">
+                    <!-- -->
+                </aside>
+            </section>
+
+            <section>
+                <h2>Docker compose</h2>
+
+                <br><br>
+
+                <ul>
+                    <li>How to use it?</li>
+                </ul>
+
+                <pre class="fragment"><code class="bash">
+    $ docker-compose up -d
+                </code></pre>
+
+                <pre class="fragment"><code class="bash">
+    $ docker-compose exec akeneo composer update
+                </code></pre>
+
+                <pre class="fragment"><code class="bash">
+    $ docker-compose exec akeneo pim-initialize
+                </code></pre>
+
+                <pre class="fragment"><code class="bash">
+    $ docker-compose exec akeneo bin/behat features/whatever/you/want.feature
+                </code></pre>
+
+                <aside class="notes">
+                    <!-- -->
+                </aside>
+            </section>
+
+            <section>
+                <h2>Docker compose</h2>
+
+                <br><br>
+
+                <ul>
+                    <li>How to use it?</li>
+                </ul>
+
+                <pre class="fragment"><code class="bash">
+    $ docker-compose down -v
+                </code></pre>
+
+                <pre class="fragment"><code class="bash">
+    $ docker rm -f -v $(docker ps -a -q)
+                </code></pre>
+
+                <pre class="fragment"><code class="bash">
+    $ docker rmi -f $(docker images -a -f "dangling=true" -q)
+                </code></pre>
+
+                <aside class="notes">
+                    <!-- -->
+                </aside>
+            </section>
+        </section>
+
+        <section>
+            <h2>Questions?</h2>
+
+            <img src="images/question.jpg">
+        </section>
+
+    </div>
+</div>
+
+<script src="bower_components/reveal.js/lib/js/head.min.js"></script>
+<script src="bower_components/reveal.js/js/reveal.js"></script>
+
+<footer class="footer">
+    <ul>
+        <li>
+            <img src="bower_components/akeneo-revealjs-theme/images/logo-svg-black.svg" width="200" style="vertical-align:middle">
+        </li>
+        <li>
+            <span class="name">Damien Carcel</span>
+        </li>
+    </ul>
+</footer>
+
+<script>
+
+    // Full list of configuration options available at:
+    // https://github.com/hakimel/reveal.js#configuration
+    Reveal.initialize({
+        controls: false,
+        progress: true,
+        history: true,
+        center: false,
+        slideNumber: true,
+
+        transition: 'slide', // none/fade/slide/convex/concave/zoom
+        parallaxBackgroundImage: 'bower_components/akeneo-revealjs-theme/images/slide-background-white-parallax.png',
+        parallaxBackgroundSize: '2100px 768px',
+
+        // Optional reveal.js plugins
+        dependencies: [
+            { src: 'bower_components/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+            { src: 'bower_components/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+            { src: 'bower_components/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+            { src: 'bower_components/reveal.js/plugin/highlight/highlight.js', async: true, condition: function() { return !!document.querySelector( 'pre code' ); }, callback: function() { hljs.initHighlightingOnLoad(); } },
+            { src: 'bower_components/reveal.js/plugin/zoom-js/zoom.js', async: true },
+            { src: 'bower_components/reveal.js/plugin/notes/notes.js', async: true }
+        ]
+    });
+
+</script>
+</body>
+</html>
