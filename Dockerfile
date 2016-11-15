@@ -1,5 +1,5 @@
 FROM debian:jessie
-MAINTAINER Damien Carcel &lt;damien.carcel@akeneo.com&gt;
+MAINTAINER Damien Carcel <damien.carcel@akeneo.com>
 
 ENV DEBIAN_FRONTEND noninteractive
 
