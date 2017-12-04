@@ -3,10 +3,11 @@
     "authors": [
         "Damien Carcel <damien.carcel@akeneo.com>"
     ],
-    "description": "A presentation of docker for beginners",
+    "description": "An introduction to Docker and Docker Compose",
     "main": "index.html",
     "keywords": [
         "docker",
+        "compose",
         "presentation"
     ],
     "license": "MIT",
